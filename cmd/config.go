@@ -54,8 +54,7 @@ noon                   Yesterday at 10:15am                 Mon, 02 Jan 2006 15:
 1:05pm                 Next dec 22nd at 3pm                 3 days ago                            1999AD
 10:25:10am             Next December 25th at 7:30am UTC-7   Three days ago                        1999 AD
 1:05:10pm              Next December 23rd AT 5:25 PM        1 day from now                        2008CE
-10:25                  Last December 23rd AT 5:25 PM        1 week ago                            2008 CE
-`
+10:25                  Last December 23rd AT 5:25 PM        1 week ago                            2008 CE`
 	ModeDiff int = iota
 	ModeAdd
 )
