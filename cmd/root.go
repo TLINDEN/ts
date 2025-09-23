@@ -20,7 +20,10 @@ func Main(output io.Writer) int {
 	}
 
 	if conf.Examples {
-		fmt.Fprintln(output, Examples)
+		_, err := fmt.Fprintln(output, Examples)
+		if err != nil {
+			Die(err)
+		}
 		os.Exit(0)
 	}
 

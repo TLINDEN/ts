@@ -18,18 +18,17 @@ const (
 	Usage         string = `This is ts, a timestamp tool.
 
 Usage: ts <time string> [<time string>]
--d --diff     Calculate difference between two timestamps (default).
--a --add      Add two timestamps (second parameter must be a time).
--f --format   For diffs: duration, hour, min, sec, msec.
-              For timestamps: datetime, rfc3339, date, time, unix, string.
+-d --diff     Calculate difference between two timestamps (default)
+-a --add      Add two timestamps (second parameter must be a time)
+-f --format   For diffs: duration, hour, min, sec, msec
+              For timestamps: datetime, rfc3339, date, time, unix, string
               string is a strftime(1) format string. datetime is
-              the default.
--u --unit    Add unit to the output of timestamp diffs.
-   --debug    Show debugging output.
--v --version  Show program version.
--h --help     Show this help screen.
--e --examples Show examples or supported inputs.
-`
+              the default
+-u --unit    Add unit to the output of timestamp diffs
+   --debug    Show debugging output
+-v --version  Show program version
+-h --help     Show this help screen
+-e --examples Show examples or supported inputs`
 
 	Examples string = `Example timestamp inputs:
 now                    10:25:30                             Last sunday at 5:30pm                 2 weeks ago

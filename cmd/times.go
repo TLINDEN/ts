@@ -65,9 +65,7 @@ func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
 	}
 
 	// now failed, try module dateparse
-	ts, err = dateparse.ParseAny(timestamp)
-
-	return ts, nil
+	return dateparse.ParseAny(timestamp)
 }
 
 func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
