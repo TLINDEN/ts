@@ -20,7 +20,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"time"
@@ -60,19 +59,8 @@ func (tp *TimestampProccessor) ProcessTimestamps() error {
 	case 1:
 		return tp.SingleTimestamp(tp.Args[0])
 	case 2:
-		return tp.Calc(tp.Args[0], tp.Args[1])
+		return tp.DualTimestamps(tp.Args[0], tp.Args[1])
 	}
-
-	return nil
-}
-
-func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
-	ts, err := tp.Parse(timestamp)
-	if err != nil {
-		return err
-	}
-
-	tp.Print(ts)
 
 	return nil
 }
@@ -94,7 +82,18 @@ func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
 	return dateparse.ParseAny(timestamp)
 }
 
-func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
+func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
+	ts, err := tp.Parse(timestamp)
+	if err != nil {
+		return err
+	}
+
+	tp.Print(ts)
+
+	return nil
+}
+
+func (tp *TimestampProccessor) DualTimestamps(timestampA, timestampB string) error {
 	tsA, err := tp.Parse(timestampA)
 	if err != nil {
 		return err
@@ -112,6 +111,12 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 		return err
 	}
 
+	tp.CalcDiff(tsA, tsB)
+
+	return nil
+}
+
+func (tp *TimestampProccessor) CalcDiff(tsA time.Time, tsB time.Time) {
 	switch tp.Mode {
 	case ModeDiff:
 		var diff time.Duration
@@ -131,8 +136,6 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 
 		tp.Print(TPdatetime{TimestampProccessor: *tp, Data: sum})
 	}
-
-	return nil
 }
 
 func (tp *TimestampProccessor) CalcDuration(tsA time.Time, durB time.Duration) {
@@ -151,7 +154,7 @@ func (tp *TimestampProccessor) CalcDuration(tsA time.Time, durB time.Duration) {
 func (tp *TimestampProccessor) Print(ts TimestampWriter) {
 	_, err := fmt.Fprintln(tp.Output, ts.String())
 	if err != nil {
-		log.Fatalf("failed to print to given output handle: %s", err)
+		Die("failed to print to given output handle", err)
 	}
 }
 

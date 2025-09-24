@@ -135,8 +135,9 @@ func InitConfig(output io.Writer) (*Config, error) {
 	if conf.Examples {
 		_, err := fmt.Fprintln(output, Examples)
 		if err != nil {
-			Die(err)
+			Die("failed write to output file handle", err)
 		}
+
 		os.Exit(0)
 	}
 

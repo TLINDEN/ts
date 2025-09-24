@@ -18,12 +18,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
+	"fmt"
 	"io"
-	"log"
+	"os"
 )
 
-func Die(err error) int {
-	log.Fatal("Error: ", err.Error())
+func Die(format string, err error) int {
+	fmt.Fprintf(os.Stderr, format+": %s\n", err)
 
 	return 1
 }
@@ -31,13 +32,14 @@ func Die(err error) int {
 func Main(output io.Writer) int {
 	conf, err := InitConfig(output)
 	if err != nil {
-		return Die(err)
+		fmt.Println(1)
+		return Die("failed to initialize", err)
 	}
 
 	tp := NewTP(conf)
 
 	if err := tp.ProcessTimestamps(); err != nil {
-		return Die(err)
+		return Die("failed to process timestamp[s]", err)
 	}
 
 	return 0
