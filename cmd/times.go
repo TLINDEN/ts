@@ -24,8 +24,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/ijt/go-anytime"
-	"github.com/itlightning/dateparse"
 	modnow "github.com/jinzhu/now"
 )
 
@@ -65,8 +65,25 @@ func (tp *TimestampProccessor) ProcessTimestamps() error {
 	return nil
 }
 
-// Parse uses 3 different timestamp parser modules to provide maximum flexibility
+// a post processor for ParseTimestamp() to apply custom time zone, if any
 func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
+	ts, err := tp.ParseTimestamp(timestamp)
+
+	if err != nil {
+		return ts, err
+	}
+
+	if tp.TZ != "" {
+		// apply custom timezone
+		zone, _ := time.LoadLocation(tp.TZ)
+		ts = ts.In(zone)
+	}
+
+	return ts, nil
+}
+
+// Parse uses 3 different timestamp parser modules to provide maximum flexibility
+func (tp *TimestampProccessor) ParseTimestamp(timestamp string) (time.Time, error) {
 	ts, err := anytime.Parse(timestamp, tp.Reference)
 	if err == nil {
 		return ts, nil

@@ -57,7 +57,7 @@ func (duration TPduration) String() string {
 	// duration, days, hour, min, sec, msec
 	switch duration.Format {
 	case "d", "day", "days":
-		return fmt.Sprintf("%.02f%s", duration.Data.Hours()/24+(duration.Data.Minutes()/60), unit)
+		return fmt.Sprintf("%.02f%s", duration.Data.Hours()/24, unit)
 	case "h", "hour", "hours":
 		return fmt.Sprintf("%.02f%s", duration.Data.Hours(), unit)
 	case "m", "min", "mins", "minutes":

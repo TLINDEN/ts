@@ -92,6 +92,7 @@ type Config struct {
 	Args        []string
 	Output      io.Writer
 	Mode        int
+	TZ          string // for unit tests
 }
 
 func InitConfig(output io.Writer) (*Config, error) {

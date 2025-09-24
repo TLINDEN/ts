@@ -1,0 +1,10 @@
+exec ts -h
+stdout 'This is ts'
+
+exec ts -e
+stdout 'yesterday'
+
+exec ts 3/1/2014
+stdout 2014-01-03
+
+
