@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	VERSIONstring        = "0.0.2"
+	VERSIONstring        = "0.0.3"
 	Usage         string = `This is ts, a timestamp tool.
 
 Usage: ts <time string> [<time string>]
