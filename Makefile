@@ -16,7 +16,7 @@
 
 #
 # no need to modify anything below
-tool      = gfn
+tool      = ts
 VERSION   = $(shell grep VERSION config.go | head -1 | cut -d '"' -f2)
 archs     = darwin freebsd linux windows
 PREFIX    = /usr/local
@@ -72,8 +72,8 @@ release:
 	gh release create v$(VERSION) --generate-notes
 
 show-versions: buildlocal
-	@echo "### gfn version:"
-	@./gfn -V
+	@echo "### ts version:"
+	@./ts -V
 
 	@echo
 	@echo "### go module versions:"
