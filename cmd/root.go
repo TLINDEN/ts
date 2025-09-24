@@ -18,10 +18,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
-	"fmt"
 	"io"
 	"log"
-	"os"
 )
 
 func Die(err error) int {
@@ -34,14 +32,6 @@ func Main(output io.Writer) int {
 	conf, err := InitConfig(output)
 	if err != nil {
 		return Die(err)
-	}
-
-	if conf.Examples {
-		_, err := fmt.Fprintln(output, Examples)
-		if err != nil {
-			Die(err)
-		}
-		os.Exit(0)
 	}
 
 	tp := NewTP(conf)

@@ -36,7 +36,7 @@ const (
 
 Usage: ts <time string> [<time string>]
 -d --diff     Calculate difference between two timestamps (default)
--a --add      Add two timestamps (second parameter must be a time)
+-a --add      Add two timestamps (second parameter must be a duration)
 -f --format   For diffs: duration, hour, min, sec, msec
               For timestamps: datetime, rfc3339, date, time, unix, string
               string is a strftime(1) format string. datetime is
@@ -71,7 +71,11 @@ noon                   Yesterday at 10:15am                 Mon, 02 Jan 2006 15:
 1:05pm                 Next dec 22nd at 3pm                 3 days ago                            1999AD
 10:25:10am             Next December 25th at 7:30am UTC-7   Three days ago                        1999 AD
 1:05:10pm              Next December 23rd AT 5:25 PM        1 day from now                        2008CE
-10:25                  Last December 23rd AT 5:25 PM        1 week ago                            2008 CE`
+10:25                  Last December 23rd AT 5:25 PM        1 week ago                            2008 CE
+
+Example durations for second parameter:
+2d1h30m  2 days, one and a half hour
+30m      30 minutes`
 	ModeDiff int = iota
 	ModeAdd
 )
@@ -125,6 +129,15 @@ func InitConfig(output io.Writer) (*Config, error) {
 	conf := &Config{Output: output}
 	if err := kloader.Unmarshal("", &conf); err != nil {
 		return nil, fmt.Errorf("error unmarshalling: %w", err)
+	}
+
+	// want examples?
+	if conf.Examples {
+		_, err := fmt.Fprintln(output, Examples)
+		if err != nil {
+			Die(err)
+		}
+		os.Exit(0)
 	}
 
 	// args are timestamps

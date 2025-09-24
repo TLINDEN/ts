@@ -18,8 +18,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/ijt/go-anytime"
@@ -97,6 +100,13 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 		return err
 	}
 
+	durB, err := duration2int(timestampB)
+	if err == nil {
+		// calculate with a duration
+		tp.CalcDuration(tsA, durB)
+		return nil
+	}
+
 	tsB, err := tp.Parse(timestampB)
 	if err != nil {
 		return err
@@ -125,9 +135,64 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 	return nil
 }
 
+func (tp *TimestampProccessor) CalcDuration(tsA time.Time, durB time.Duration) {
+	var datetime time.Time
+
+	switch tp.Mode {
+	case ModeDiff:
+		datetime = tsA.Add(-durB)
+	case ModeAdd:
+		datetime = tsA.Add(durB)
+	}
+
+	tp.Print(TPdatetime{TimestampProccessor: *tp, Data: datetime})
+}
+
 func (tp *TimestampProccessor) Print(ts TimestampWriter) {
 	_, err := fmt.Fprintln(tp.Output, ts.String())
 	if err != nil {
 		log.Fatalf("failed to print to given output handle: %s", err)
 	}
+}
+
+/*
+We could use time.ParseDuration(), but this doesn't support days.
+
+We  could also  use github.com/xhit/go-str2duration/v2,  which does
+the job,  but it's  just another dependency,  just for  this little
+gem. And  we don't need a  time.Time value.
+
+Convert a  duration into  seconds (int).
+
+	Valid  time units  are "s", "m", "h" and "d".
+
+	Valid inputs: 2h5m (2 hours and 5 min), 10d12h (10 and a half days)
+*/
+func duration2int(duration string) (time.Duration, error) {
+	re := regexp.MustCompile(`(\d+)([dhms])`)
+	seconds := 0
+	found := false
+
+	for _, match := range re.FindAllStringSubmatch(duration, -1) {
+		if len(match) == 3 {
+			found = true
+			v, _ := strconv.Atoi(match[1])
+			switch match[2][0] {
+			case 'd':
+				seconds += v * 86400
+			case 'h':
+				seconds += v * 3600
+			case 'm':
+				seconds += v * 60
+			case 's':
+				seconds += v
+			}
+		}
+	}
+
+	if !found {
+		return 0, errors.New("failed to parse duration")
+	}
+
+	return time.Duration(seconds) * time.Second, nil
 }
