@@ -25,20 +25,24 @@ Usage: ts <time string> [<time string>]
 
 ```default
 # diff between to day and yesterday 10 am
-ts today "10am yesterday"
+% date && ts today "10am yesterday"
+Wed Sep 24 02:05:03 PM CEST 2025
 14h0m0s
 
 # show timestamp from a couple days ago
-ts "3 days ago"
-2025-09-21 13:51:55.054754744 +0200 CEST
+% date && ts "3 days ago"
+Wed Sep 24 02:04:42 PM CEST 2025
+2025-09-21 14:04:42.428910108 +0200 CEST
 
 # show timestamp of one hour and 45 minutes before (-d is the defaul)
-ts -d now 1h45m
-2025-09-24 12:07:45.072300157 +0200 CEST m=-6299.999710536
+% date && ts -d now 1h45m
+Wed Sep 24 02:04:14 PM CEST 2025
+2025-09-24 12:19:14.932440045 +0200 CEST
 
 # 10 hours from now
-ts now 10h
-2025-09-24 03:53:36.7095512 +0200 CEST m=-35999.999720767
+% date && ts --add now 10h 
+Wed Sep 24 02:03:31 PM CEST 2025
+2025-09-25 00:03:31.304518854 +0200 CEST
 ```
 
 To see a comprehensive list of supported inputs, call `ts -e`.
