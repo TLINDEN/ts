@@ -2,7 +2,7 @@
 
 generic cli timestamp parser and calculator tool
 
-# Usage
+## Usage
 
 ```default
 This is ts, a timestamp tool.
@@ -20,6 +20,28 @@ Usage: ts <time string> [<time string>]
 -h --help     Show this help screen.
 -e --examples Show examples or supported inputs.
 ```
+
+## Examples
+
+```default
+# diff between to day and yesterday 10 am
+ts today "10am yesterday"
+14h0m0s
+
+# show timestamp from a couple days ago
+ts "3 days ago"
+2025-09-21 13:51:55.054754744 +0200 CEST
+
+# show timestamp of one hour and 45 minutes before (-d is the defaul)
+ts -d now 1h45m
+2025-09-24 12:07:45.072300157 +0200 CEST m=-6299.999710536
+
+# 10 hours from now
+ts now 10h
+2025-09-24 03:53:36.7095512 +0200 CEST m=-35999.999720767
+```
+
+To see a comprehensive list of supported inputs, call `ts -e`.
 
 ## Installation
 

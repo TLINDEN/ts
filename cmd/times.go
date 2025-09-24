@@ -1,31 +1,58 @@
+/*
+Copyright © 2025 Thomas von Dein
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/ijt/go-anytime"
 	"github.com/itlightning/dateparse"
-	"github.com/jinzhu/now"
+	modnow "github.com/jinzhu/now"
 )
 
 type TimestampProccessor struct {
 	Config
+	Reference time.Time
 }
 
-func NewTP(conf *Config) *TimestampProccessor {
+func NewTP(conf *Config, ref ...time.Time) *TimestampProccessor {
+	// we add some pre-defined formats to modnow
 	formats := []string{
 		time.UnixDate, time.RubyDate,
 		time.RFC1123, time.RFC1123Z, time.RFC3339, time.RFC3339Nano,
 		time.RFC822, time.RFC822Z, time.RFC850,
 		"Mon Jan 02 15:04:05 PM MST 2006", // linux date
-		"Mo. 02 Jan. 2006 15:04:05 MST",   // freebsd date (fails, see golang/go/issues/75576)
 	}
 
-	now.TimeFormats = append(now.TimeFormats, formats...)
+	modnow.TimeFormats = append(modnow.TimeFormats, formats...)
 
-	return &TimestampProccessor{Config: *conf}
+	tp := &TimestampProccessor{Config: *conf, Reference: time.Now()}
+
+	if len(ref) == 1 {
+		tp.Reference = ref[0]
+	}
+
+	return tp
 }
 
 func (tp *TimestampProccessor) ProcessTimestamps() error {
@@ -50,32 +77,37 @@ func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
 	return nil
 }
 
-// Parse uses 3 different timestamp parser modules to provide the maximum flexibility
+// Parse uses 3 different timestamp parser modules to provide maximum flexibility
 func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
-	reference := time.Now()
-	ts, err := anytime.Parse(timestamp, reference)
+	ts, err := anytime.Parse(timestamp, tp.Reference)
 	if err == nil {
 		return ts, nil
 	}
 
-	// anytime failed, try module now
-	ts, err = now.Parse(timestamp)
+	// anytime failed, try module modnow
+	ts, err = modnow.Parse(timestamp)
 	if err == nil {
 		return ts, nil
 	}
 
-	// now failed, try module dateparse
+	// modnow failed, try module dateparse
 	return dateparse.ParseAny(timestamp)
 }
 
 func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
-	now := time.Now()
-	tsA, err := anytime.Parse(timestampA, now)
+	tsA, err := tp.Parse(timestampA)
 	if err != nil {
 		return err
 	}
 
-	tsB, err := anytime.Parse(timestampB, now)
+	durB, err := duration2int(timestampB)
+	if err == nil {
+		// calculate with a duration
+		tp.CalcDuration(tsA, durB)
+		return nil
+	}
+
+	tsB, err := tp.Parse(timestampB)
 	if err != nil {
 		return err
 	}
@@ -83,91 +115,84 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 	switch tp.Mode {
 	case ModeDiff:
 		var diff time.Duration
+
+		// avoid negative results
 		if tsA.Unix() > tsB.Unix() {
 			diff = tsA.Sub(tsB)
 		} else {
 			diff = tsB.Sub(tsA)
 		}
-		tp.Print(diff)
+
+		tp.Print(TPduration{TimestampProccessor: *tp, Data: diff})
+
 	case ModeAdd:
 		seconds := (tsB.Hour() * 3600) + (tsB.Minute() * 60) + tsB.Second()
-		tp.Print(tsA.Add(time.Duration(seconds) * time.Second))
+		sum := tsA.Add(time.Duration(seconds) * time.Second)
+
+		tp.Print(TPdatetime{TimestampProccessor: *tp, Data: sum})
 	}
 
 	return nil
 }
 
-func (tp *TimestampProccessor) Print(msg any) {
-	var repr string
+func (tp *TimestampProccessor) CalcDuration(tsA time.Time, durB time.Duration) {
+	var datetime time.Time
 
-	switch msg := msg.(type) {
-	case string:
-		repr = msg
-	case time.Time:
-		repr = tp.StringTime(msg)
-	case time.Duration:
-		repr = tp.StringDuration(msg)
+	switch tp.Mode {
+	case ModeDiff:
+		datetime = tsA.Add(-durB)
+	case ModeAdd:
+		datetime = tsA.Add(durB)
 	}
 
-	_, err := fmt.Fprintln(tp.Output, repr)
+	tp.Print(TPdatetime{TimestampProccessor: *tp, Data: datetime})
+}
+
+func (tp *TimestampProccessor) Print(ts TimestampWriter) {
+	_, err := fmt.Fprintln(tp.Output, ts.String())
 	if err != nil {
 		log.Fatalf("failed to print to given output handle: %s", err)
 	}
 }
 
-func (tp *TimestampProccessor) StringDuration(msg time.Duration) string {
-	var unit string
+/*
+We could use time.ParseDuration(), but this doesn't support days.
 
-	if tp.Unit {
-		switch tp.Format {
-		case "d", "day", "days":
-			unit = " days"
-		case "h", "hour", "hours":
-			unit = " hours"
-		case "m", "min", "mins", "minutes":
-			unit = " minutes"
-		case "s", "sec", "secs", "seconds":
-			unit = " seconds"
-		case "ms", "msec", "msecs", "milliseconds":
-			unit = " milliseconds"
+We  could also  use github.com/xhit/go-str2duration/v2,  which does
+the job,  but it's  just another dependency,  just for  this little
+gem. And  we don't need a  time.Time value.
+
+Convert a  duration into  seconds (int).
+
+	Valid  time units  are "s", "m", "h" and "d".
+
+	Valid inputs: 2h5m (2 hours and 5 min), 10d12h (10 and a half days)
+*/
+func duration2int(duration string) (time.Duration, error) {
+	re := regexp.MustCompile(`(\d+)([dhms])`)
+	seconds := 0
+	found := false
+
+	for _, match := range re.FindAllStringSubmatch(duration, -1) {
+		if len(match) == 3 {
+			found = true
+			v, _ := strconv.Atoi(match[1])
+			switch match[2][0] {
+			case 'd':
+				seconds += v * 86400
+			case 'h':
+				seconds += v * 3600
+			case 'm':
+				seconds += v * 60
+			case 's':
+				seconds += v
+			}
 		}
 	}
 
-	// duration, days, hour, min, sec, msec
-	switch tp.Format {
-	case "d", "day", "days":
-		return fmt.Sprintf("%.02f%s", msg.Hours()/24+(msg.Minutes()/60), unit)
-	case "h", "hour", "hours":
-		return fmt.Sprintf("%.02f%s", msg.Hours(), unit)
-	case "m", "min", "mins", "minutes":
-		return fmt.Sprintf("%.02f%s", msg.Minutes(), unit)
-	case "s", "sec", "secs", "seconds":
-		return fmt.Sprintf("%.02f%s", msg.Seconds(), unit)
-	case "ms", "msec", "msecs", "milliseconds":
-		return fmt.Sprintf("%d%s", msg.Milliseconds(), unit)
-	case "dur", "duration":
-		fallthrough
-	default:
-		return msg.String()
+	if !found {
+		return 0, errors.New("failed to parse duration")
 	}
-}
 
-func (tp *TimestampProccessor) StringTime(msg time.Time) string {
-	// datetime(default), date, time, unix, string
-	switch tp.Format {
-	case "rfc3339":
-		return msg.Format(time.RFC3339)
-	case "date":
-		return msg.Format("2006-01-02")
-	case "time":
-		return msg.Format("03:04:05")
-	case "unix":
-		return fmt.Sprintf("%d", msg.Unix())
-	case "datetime":
-		fallthrough
-	case "":
-		return msg.String()
-	default:
-		return msg.Format(tp.Format)
-	}
+	return time.Duration(seconds) * time.Second, nil
 }

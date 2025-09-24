@@ -16,7 +16,7 @@
 
 #
 # no need to modify anything below
-tool      = gfn
+tool      = ts
 VERSION   = $(shell grep VERSION config.go | head -1 | cut -d '"' -f2)
 archs     = darwin freebsd linux windows
 PREFIX    = /usr/local
@@ -37,11 +37,10 @@ install: buildlocal
 	install -o $(UID) -g $(GID) -m 444 $(tool).1 $(PREFIX)/man/man1/
 
 clean:
-	rm -rf $(tool) coverage.out testdata t/out
+	rm -rf $(tool) coverage.* testdata t/out
 
 test: clean
-	mkdir -p t/out
-	go test ./... $(ARGS)
+	go test -cover ./... $(ARGS)
 
 testlint: test lint
 
@@ -60,7 +59,8 @@ singletest:
 
 cover-report:
 	go test ./... -cover -coverprofile=coverage.out
-	go tool cover -html=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+	chromium coverage.html
 
 goupdate:
 	go get -t -u=patch ./...
@@ -72,8 +72,8 @@ release:
 	gh release create v$(VERSION) --generate-notes
 
 show-versions: buildlocal
-	@echo "### gfn version:"
-	@./gfn -V
+	@echo "### ts version:"
+	@./ts -V
 
 	@echo
 	@echo "### go module versions:"
