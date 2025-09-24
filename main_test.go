@@ -15,32 +15,24 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-package cmd
+package main
 
 import (
-	"fmt"
-	"io"
-	"os"
+	"testing"
+
+	"github.com/rogpeppe/go-internal/testscript"
 )
 
-func Die(format string, err error) int {
-	fmt.Fprintf(os.Stderr, format+": %s\n", err)
+// see https://bitfieldconsulting.com/golang/test-scripts
 
-	return 1
+func TestMain(m *testing.M) {
+	testscript.Main(m, map[string]func(){
+		"ts": main,
+	})
 }
 
-func Main(output io.Writer) int {
-	conf, err := InitConfig(output)
-	if err != nil {
-		fmt.Println(1)
-		return Die("failed to initialize", err)
-	}
-
-	tp := NewTP(conf)
-
-	if err := tp.ProcessTimestamps(); err != nil {
-		return Die("failed to process timestamp[s]", err)
-	}
-
-	return 0
+func Test_TS(t *testing.T) {
+	testscript.Run(t, testscript.Params{
+		Dir: "t",
+	})
 }

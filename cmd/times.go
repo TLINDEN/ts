@@ -20,13 +20,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/ijt/go-anytime"
-	"github.com/itlightning/dateparse"
 	modnow "github.com/jinzhu/now"
 )
 
@@ -60,25 +59,31 @@ func (tp *TimestampProccessor) ProcessTimestamps() error {
 	case 1:
 		return tp.SingleTimestamp(tp.Args[0])
 	case 2:
-		return tp.Calc(tp.Args[0], tp.Args[1])
+		return tp.DualTimestamps(tp.Args[0], tp.Args[1])
 	}
 
 	return nil
 }
 
-func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
-	ts, err := tp.Parse(timestamp)
+// a post processor for ParseTimestamp() to apply custom time zone, if any
+func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
+	ts, err := tp.ParseTimestamp(timestamp)
+
 	if err != nil {
-		return err
+		return ts, err
 	}
 
-	tp.Print(ts)
+	if tp.TZ != "" {
+		// apply custom timezone
+		zone, _ := time.LoadLocation(tp.TZ)
+		ts = ts.In(zone)
+	}
 
-	return nil
+	return ts, nil
 }
 
 // Parse uses 3 different timestamp parser modules to provide maximum flexibility
-func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
+func (tp *TimestampProccessor) ParseTimestamp(timestamp string) (time.Time, error) {
 	ts, err := anytime.Parse(timestamp, tp.Reference)
 	if err == nil {
 		return ts, nil
@@ -94,7 +99,18 @@ func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
 	return dateparse.ParseAny(timestamp)
 }
 
-func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
+func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
+	ts, err := tp.Parse(timestamp)
+	if err != nil {
+		return err
+	}
+
+	tp.Print(ts)
+
+	return nil
+}
+
+func (tp *TimestampProccessor) DualTimestamps(timestampA, timestampB string) error {
 	tsA, err := tp.Parse(timestampA)
 	if err != nil {
 		return err
@@ -112,6 +128,12 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 		return err
 	}
 
+	tp.CalcDiff(tsA, tsB)
+
+	return nil
+}
+
+func (tp *TimestampProccessor) CalcDiff(tsA time.Time, tsB time.Time) {
 	switch tp.Mode {
 	case ModeDiff:
 		var diff time.Duration
@@ -131,8 +153,6 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 
 		tp.Print(TPdatetime{TimestampProccessor: *tp, Data: sum})
 	}
-
-	return nil
 }
 
 func (tp *TimestampProccessor) CalcDuration(tsA time.Time, durB time.Duration) {
@@ -151,7 +171,7 @@ func (tp *TimestampProccessor) CalcDuration(tsA time.Time, durB time.Duration) {
 func (tp *TimestampProccessor) Print(ts TimestampWriter) {
 	_, err := fmt.Fprintln(tp.Output, ts.String())
 	if err != nil {
-		log.Fatalf("failed to print to given output handle: %s", err)
+		Die("failed to print to given output handle", err)
 	}
 }
 

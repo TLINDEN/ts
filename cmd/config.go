@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	VERSIONstring        = "0.0.2"
+	VERSIONstring        = "0.0.3"
 	Usage         string = `This is ts, a timestamp tool.
 
 Usage: ts <time string> [<time string>]
@@ -92,6 +92,7 @@ type Config struct {
 	Args        []string
 	Output      io.Writer
 	Mode        int
+	TZ          string // for unit tests
 }
 
 func InitConfig(output io.Writer) (*Config, error) {
@@ -135,8 +136,9 @@ func InitConfig(output io.Writer) (*Config, error) {
 	if conf.Examples {
 		_, err := fmt.Fprintln(output, Examples)
 		if err != nil {
-			Die(err)
+			Die("failed write to output file handle", err)
 		}
+
 		os.Exit(0)
 	}
 

@@ -65,13 +65,15 @@ func TestParseTimestamps(t *testing.T) {
 		{`One year ago`, now.AddDate(-1, 0, 0)},
 		{`03:15`, dateAtTime(now, 3, 15, 0)},
 		{`Wed Sep 25 12:30:00 PM UTC 2025`, now},
+		{`Wed Sep 25 00:30:00 PM CEST 2025`, now},
+		{`Wed Sep 25 2025 13:30:00 GMT+0100 (GMT Daylight Time)`, now},
 	}
 
 	for _, tt := range datetimes {
 		testname := fmt.Sprintf("parsetimestamp-%s", strings.ReplaceAll(tt.input, " ", "-"))
 		t.Run(testname, func(t *testing.T) {
 			var writer bytes.Buffer
-			tp := NewTP(&Config{Args: []string{tt.input}, Output: &writer}, now)
+			tp := NewTP(&Config{Args: []string{tt.input}, Output: &writer, TZ: "UTC"}, now)
 
 			// writer.String()
 			ts, err := tp.Parse(tt.input)
