@@ -1,3 +1,20 @@
+/*
+Copyright © 2025 Thomas von Dein
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package cmd
 
 import (
@@ -12,20 +29,27 @@ import (
 
 type TimestampProccessor struct {
 	Config
+	Reference time.Time
 }
 
-func NewTP(conf *Config) *TimestampProccessor {
+func NewTP(conf *Config, ref ...time.Time) *TimestampProccessor {
+	// we add some pre-defined formats to modnow
 	formats := []string{
 		time.UnixDate, time.RubyDate,
 		time.RFC1123, time.RFC1123Z, time.RFC3339, time.RFC3339Nano,
 		time.RFC822, time.RFC822Z, time.RFC850,
 		"Mon Jan 02 15:04:05 PM MST 2006", // linux date
-		"Mo. 02 Jan. 2006 15:04:05 MST",   // freebsd date (fails, see golang/go/issues/75576)
 	}
 
 	modnow.TimeFormats = append(modnow.TimeFormats, formats...)
 
-	return &TimestampProccessor{Config: *conf}
+	tp := &TimestampProccessor{Config: *conf, Reference: time.Now()}
+
+	if len(ref) == 1 {
+		tp.Reference = ref[0]
+	}
+
+	return tp
 }
 
 func (tp *TimestampProccessor) ProcessTimestamps() error {
@@ -50,10 +74,9 @@ func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
 	return nil
 }
 
-// Parse uses 3 different timestamp parser modules to provide the maximum flexibility
+// Parse uses 3 different timestamp parser modules to provide maximum flexibility
 func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
-	reference := time.Now()
-	ts, err := anytime.Parse(timestamp, reference)
+	ts, err := anytime.Parse(timestamp, tp.Reference)
 	if err == nil {
 		return ts, nil
 	}
@@ -82,16 +105,20 @@ func (tp *TimestampProccessor) Calc(timestampA, timestampB string) error {
 	switch tp.Mode {
 	case ModeDiff:
 		var diff time.Duration
+
+		// avoid negative results
 		if tsA.Unix() > tsB.Unix() {
 			diff = tsA.Sub(tsB)
 		} else {
 			diff = tsB.Sub(tsA)
 		}
+
 		tp.Print(TPduration{TimestampProccessor: *tp, Data: diff})
 
 	case ModeAdd:
 		seconds := (tsB.Hour() * 3600) + (tsB.Minute() * 60) + tsB.Second()
 		sum := tsA.Add(time.Duration(seconds) * time.Second)
+
 		tp.Print(TPdatetime{TimestampProccessor: *tp, Data: sum})
 	}
 

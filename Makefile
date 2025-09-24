@@ -37,11 +37,10 @@ install: buildlocal
 	install -o $(UID) -g $(GID) -m 444 $(tool).1 $(PREFIX)/man/man1/
 
 clean:
-	rm -rf $(tool) coverage.out testdata t/out
+	rm -rf $(tool) coverage.* testdata t/out
 
 test: clean
-	mkdir -p t/out
-	go test ./... $(ARGS)
+	go test -cover ./... $(ARGS)
 
 testlint: test lint
 
@@ -60,7 +59,8 @@ singletest:
 
 cover-report:
 	go test ./... -cover -coverprofile=coverage.out
-	go tool cover -html=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+	chromium coverage.html
 
 goupdate:
 	go get -t -u=patch ./...
