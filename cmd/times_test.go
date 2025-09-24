@@ -20,6 +20,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -39,7 +40,10 @@ func dateAtTime(dateFrom time.Time, hour int, min int, sec int) time.Time {
 
 func setUTC() {
 	// make sure to have a consistent environment
-	os.Setenv("TZ", "UTC")
+	if err := os.Setenv("TZ", "UTC"); err != nil {
+		log.Fatal(err)
+	}
+
 	loc, _ := time.LoadLocation("UTC")
 	time.Local = loc
 }
