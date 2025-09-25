@@ -73,9 +73,9 @@ func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
 		return ts, err
 	}
 
-	if tp.TZ != "" {
+	if tp.tz != "" {
 		// apply custom timezone
-		zone, _ := time.LoadLocation(tp.TZ)
+		zone, _ := time.LoadLocation(tp.tz)
 		ts = ts.In(zone)
 	}
 

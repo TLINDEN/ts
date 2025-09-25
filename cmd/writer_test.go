@@ -65,7 +65,7 @@ func TestDatetime(t *testing.T) {
 		{"date", now, "2025-09-25"},
 		{"time", now, "12:30:00"},
 		{"unix", now, "1758803400"},
-		{"datetime", now, "2025-09-25 12:30:00 +0000 UTC"},
+		{"datetime", now, "Thu Sep 25 12:30:00 UTC 2025"},
 	}
 
 	for _, tt := range tests {

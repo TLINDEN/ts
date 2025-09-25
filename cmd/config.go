@@ -23,6 +23,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/v2"
@@ -80,7 +81,7 @@ Example durations for second parameter:
 	ModeDiff int = iota
 	ModeAdd
 
-	DefaultFormat string = "Mon Jan 02 15:04:05 MST"
+	DefaultFormat string = "Mon Jan 02 15:04:05 MST 2006"
 )
 
 type Config struct {
@@ -95,7 +96,10 @@ type Config struct {
 	Args        []string
 	Output      io.Writer
 	Mode        int
-	TZ          string // for unit tests
+
+	// internal flags for [unit] tests
+	tz      string
+	refTime time.Time
 }
 
 func InitConfig(output io.Writer) (*Config, error) {
