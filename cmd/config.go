@@ -98,8 +98,8 @@ type Config struct {
 	Mode        int
 
 	// internal flags for [unit] tests
-	tz      string
-	refTime time.Time
+	tz      string    // has to be set directly in code
+	refTime time.Time // must be set via env var $TSREFTIME
 }
 
 func InitConfig(output io.Writer) (*Config, error) {
@@ -134,9 +134,21 @@ func InitConfig(output io.Writer) (*Config, error) {
 	}
 
 	// fetch values
-	conf := &Config{Output: output}
+	conf := &Config{Output: output, refTime: time.Now()}
 	if err := kloader.Unmarshal("", &conf); err != nil {
 		return nil, fmt.Errorf("error unmarshalling: %w", err)
+	}
+
+	// check internal env var[s], if any
+	reftime, present := os.LookupEnv("TSREFTIME")
+	if present {
+		// e.g: 2014-01-03T00:00:00+01:00
+		ts, err := time.Parse(time.RFC3339Nano, reftime)
+		if err != nil {
+			os.Exit(Die("failed to set reference time from $TSREFTIME", err))
+		}
+
+		conf.refTime = ts
 	}
 
 	// want examples?

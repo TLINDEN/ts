@@ -45,9 +45,10 @@ func NewTP(conf *Config, ref ...time.Time) *TimestampProccessor {
 
 	modnow.TimeFormats = append(modnow.TimeFormats, formats...)
 
-	tp := &TimestampProccessor{Config: *conf, Reference: time.Now()}
+	tp := &TimestampProccessor{Config: *conf, Reference: conf.refTime}
 
 	if len(ref) == 1 {
+		// overwritten externally by unit test
 		tp.Reference = ref[0]
 	}
 
