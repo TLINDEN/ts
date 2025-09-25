@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	VERSIONstring        = "0.0.3"
+	VERSIONstring        = "0.0.4"
 	Usage         string = `This is ts, a timestamp tool.
 
 Usage: ts <time string> [<time string>]
@@ -76,8 +76,11 @@ noon                   Yesterday at 10:15am                 Mon, 02 Jan 2006 15:
 Example durations for second parameter:
 2d1h30m  2 days, one and a half hour
 30m      30 minutes`
+
 	ModeDiff int = iota
 	ModeAdd
+
+	DefaultFormat string = "Mon Jan 02 15:04:05 MST"
 )
 
 type Config struct {

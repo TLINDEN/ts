@@ -105,7 +105,8 @@ func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
 		return err
 	}
 
-	tp.Print(ts)
+	tp.Print(TPdatetime{TimestampProccessor: *tp, Data: ts})
+	//tp.Print(ts)
 
 	return nil
 }

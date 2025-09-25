@@ -87,7 +87,7 @@ func (datetime TPdatetime) String() string {
 	case "datetime":
 		fallthrough
 	case "":
-		return datetime.Data.String()
+		return datetime.Data.Format(DefaultFormat)
 	default:
 		return datetime.Data.Format(datetime.Format)
 	}
