@@ -26,7 +26,7 @@ Show current date and time (same as `date`):
 Wed Sep 17 07:30:00 +0100 2025
 ```
 
-show timestamp for minus 1 houer
+show timestamp for minus 1 hour
 ```default
 % ts "1 hour ago"
 Wed Sep 17 06:30:00 +0100 2025
@@ -46,7 +46,7 @@ timestamp from now plus 10 days and 4 hours in the future:
 Sat Sep 27 11:30:00 +0100 2025
 ```
 
-It doesn't make difference where you position the `-a` parameter:
+It doesn't make a difference where you position the `-a` parameter:
 ```default
 % ts now -a 10d4h
 Sat Sep 27 11:30:00 +0100 2025
