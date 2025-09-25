@@ -23,6 +23,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/v2"
@@ -31,7 +32,7 @@ import (
 )
 
 const (
-	VERSIONstring        = "0.0.3"
+	VERSIONstring        = "0.0.4"
 	Usage         string = `This is ts, a timestamp tool.
 
 Usage: ts <time string> [<time string>]
@@ -76,8 +77,11 @@ noon                   Yesterday at 10:15am                 Mon, 02 Jan 2006 15:
 Example durations for second parameter:
 2d1h30m  2 days, one and a half hour
 30m      30 minutes`
+
 	ModeDiff int = iota
 	ModeAdd
+
+	DefaultFormat string = "Mon Jan 02 15:04:05 MST 2006"
 )
 
 type Config struct {
@@ -92,7 +96,10 @@ type Config struct {
 	Args        []string
 	Output      io.Writer
 	Mode        int
-	TZ          string // for unit tests
+
+	// internal flags for [unit] tests
+	tz      string    // has to be set directly in code
+	refTime time.Time // must be set via env var $TSREFTIME
 }
 
 func InitConfig(output io.Writer) (*Config, error) {
@@ -127,9 +134,21 @@ func InitConfig(output io.Writer) (*Config, error) {
 	}
 
 	// fetch values
-	conf := &Config{Output: output}
+	conf := &Config{Output: output, refTime: time.Now()}
 	if err := kloader.Unmarshal("", &conf); err != nil {
 		return nil, fmt.Errorf("error unmarshalling: %w", err)
+	}
+
+	// check internal env var[s], if any
+	reftime, present := os.LookupEnv("TSREFTIME")
+	if present {
+		// e.g: 2014-01-03T00:00:00+01:00
+		ts, err := time.Parse(time.RFC3339Nano, reftime)
+		if err != nil {
+			os.Exit(Die("failed to set reference time from $TSREFTIME", err))
+		}
+
+		conf.refTime = ts
 	}
 
 	// want examples?

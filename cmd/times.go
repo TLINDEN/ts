@@ -45,9 +45,10 @@ func NewTP(conf *Config, ref ...time.Time) *TimestampProccessor {
 
 	modnow.TimeFormats = append(modnow.TimeFormats, formats...)
 
-	tp := &TimestampProccessor{Config: *conf, Reference: time.Now()}
+	tp := &TimestampProccessor{Config: *conf, Reference: conf.refTime}
 
 	if len(ref) == 1 {
+		// overwritten externally by unit test
 		tp.Reference = ref[0]
 	}
 
@@ -73,9 +74,9 @@ func (tp *TimestampProccessor) Parse(timestamp string) (time.Time, error) {
 		return ts, err
 	}
 
-	if tp.TZ != "" {
+	if tp.tz != "" {
 		// apply custom timezone
-		zone, _ := time.LoadLocation(tp.TZ)
+		zone, _ := time.LoadLocation(tp.tz)
 		ts = ts.In(zone)
 	}
 
@@ -105,7 +106,8 @@ func (tp *TimestampProccessor) SingleTimestamp(timestamp string) error {
 		return err
 	}
 
-	tp.Print(ts)
+	tp.Print(TPdatetime{TimestampProccessor: *tp, Data: ts})
+	//tp.Print(ts)
 
 	return nil
 }

@@ -2,11 +2,137 @@
 
 generic cli timestamp parser and calculator tool
 
-## Usage
+## Introduction
+
+This little utility is a commandline frontent to the amazing datetime
+parser module [anytime](https://github.com/ijt/go-anytime). It uses
+two other modules as fallback if anytime might fail:
+[now](https://github.com/jinzhu/now) and
+[dateparse](github.com/araddon/dateparse).
+
+You can use it to print timestamps from plain english phrases like
+`next December 23rd AT 5:25 PM` or `two minutes from now`. In addition
+you can calculate the difference between two timestamps and you can
+add a duration to a timestamp.
+
+
+## Example Usage
+
+In these examples the current time is always **2025-09-17T07:30:00+01:00**.
+
+Show current date and time (same as `date`):
+```default
+% ts now
+Wed Sep 17 07:30:00 +0100 2025
+```
+
+show timestamp for minus 1 hour
+```default
+% ts "1 hour ago"
+Wed Sep 17 06:30:00 +0100 2025
+```
+
+... or from a couple days ago:
+```default
+% ts "4 days ago"
+Sat Sep 13 07:30:00 +0100 2025
+```
+There are much more ways to get timestamps, see `ts -e`.
+
+We  can  also add  times  to  timestamps, here  we  want  to know  the
+timestamp from now plus 10 days and 4 hours in the future:
+```default
+% ts -a now 10d4h
+Sat Sep 27 11:30:00 +0100 2025
+```
+
+It doesn't make a difference where you position the `-a` parameter:
+```default
+% ts now -a 10d4h
+Sat Sep 27 11:30:00 +0100 2025
+```
+Of course you can also calculate the difference between two
+dates. Here we have two timestamps (maybe we took them from a log
+file) and want to know the dime elapsed between them:
 
 ```default
-This is ts, a timestamp tool.
+% ts 2025-09-17T07:30:00+01:00 2025-09-15T12:45:00+01:00
+42h45m0s
+```
+As you can see, if you do not provide a parameter, the default is to
+calculate the difference between the two args. To explicitly calculate
+the difference, use the `-d` parameter.
 
+You can of course use english phrases for time differences as well:
+```default
+% ts "today 9 am" 2025-09-15T12:45:00+01:00
+44h15m0s
+```
+
+Lets talk a little bit about formatting. You may have already
+recognized, that `ts` prints either whole timestamps or
+durations. Both output types can be modified with the `-f`
+parameter. There are predefined formats for timestamps:
+
+```default
+% ts now 
+Wed Sep 17 07:30:00 +0100 2025
+% ts now -f rfc3339
+2025-09-17T07:30:00+01:00
+% ts now -f date
+2025-09-17
+% ts now -f unix
+1758090600
+```
+
+But you can also specify your own, you have to follow the [golang
+rules for timestamp formats](https://pkg.go.dev/time#Layout),
+basically:
+
+* Year: "2006" "06"
+* Month: "Jan" "January" "01" "1"
+* Day of the week: "Mon" "Monday"
+* Day of the month: "2" "_2" "02"
+* Day of the year: "__2" "002"
+* Hour: "15" "3" "03" (PM or AM)
+* Minute: "4" "04"
+* Second: "5" "05"
+* AM/PM mark: "PM"
+
+for example:
+```default
+% ts now -f "Mon, 02.January 2006"
+Wed, 17.September 2025
+```
+
+Ok I admit look is kinda weird, complaints go the the golang dev team
+:).
+
+Duration formatting is also customizable. By default a duration looks
+like we have seen above: `44h15m0s`. But sometimes we want to know the
+number of hours or minutes. Easy:
+
+```default
+% ts now 2025-09-15T12:45:00+01:00 -f hours
+42.75
+% ts now 2025-09-15T12:45:00+01:00 -f minutes
+2565.00
+```
+
+You may also add the `-u` parameter to have the unit shown as well:
+
+```default
+% ts now 2025-09-15T12:45:00+01:00 -f hours -u
+42.75 hours
+% ts now 2025-09-15T12:45:00+01:00 -f minutes -u
+2565.00 minutes
+```
+
+## Commandline parameters
+
+Here is the list of all supported parameters:
+
+```default
 Usage: ts <time string> [<time string>]
 -d --diff     Calculate difference between two timestamps (default).
 -a --add      Add two timestamps (second parameter must be a time).
@@ -21,31 +147,6 @@ Usage: ts <time string> [<time string>]
 -e --examples Show examples or supported inputs.
 ```
 
-## Examples
-
-```default
-# diff between to day and yesterday 10 am
-% date && ts today "10am yesterday"
-Wed Sep 24 02:05:03 PM CEST 2025
-14h0m0s
-
-# show timestamp from a couple days ago
-% date && ts "3 days ago"
-Wed Sep 24 02:04:42 PM CEST 2025
-2025-09-21 14:04:42.428910108 +0200 CEST
-
-# show timestamp of one hour and 45 minutes before (-d is the defaul)
-% date && ts -d now 1h45m
-Wed Sep 24 02:04:14 PM CEST 2025
-2025-09-24 12:19:14.932440045 +0200 CEST
-
-# 10 hours from now
-% date && ts --add now 10h 
-Wed Sep 24 02:03:31 PM CEST 2025
-2025-09-25 00:03:31.304518854 +0200 CEST
-```
-
-To see a comprehensive list of supported inputs, call `ts -e`.
 
 ## Installation
 

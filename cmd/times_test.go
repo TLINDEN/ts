@@ -73,7 +73,7 @@ func TestParseTimestamps(t *testing.T) {
 		testname := fmt.Sprintf("parsetimestamp-%s", strings.ReplaceAll(tt.input, " ", "-"))
 		t.Run(testname, func(t *testing.T) {
 			var writer bytes.Buffer
-			tp := NewTP(&Config{Args: []string{tt.input}, Output: &writer, TZ: "UTC"}, now)
+			tp := NewTP(&Config{Args: []string{tt.input}, Output: &writer, tz: "UTC"}, now)
 
 			// writer.String()
 			ts, err := tp.Parse(tt.input)
@@ -82,7 +82,7 @@ func TestParseTimestamps(t *testing.T) {
 
 			err = tp.ProcessTimestamps()
 			assert.NoError(t, err)
-			assert.EqualValues(t, tt.want.String()+"\n", writer.String())
+			assert.EqualValues(t, tt.want.Format(DefaultFormat)+"\n", writer.String())
 		})
 	}
 }
@@ -148,7 +148,7 @@ func TestAddTimestamps(t *testing.T) {
 
 			err := tp.ProcessTimestamps()
 			assert.NoError(t, err)
-			assert.EqualValues(t, tt.want.String()+"\n", writer.String())
+			assert.EqualValues(t, tt.want.Format(DefaultFormat)+"\n", writer.String())
 		})
 	}
 }
