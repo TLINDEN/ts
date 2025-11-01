@@ -17,6 +17,14 @@ steps:
       - go build
       - go test -cover ./...
 
+  test:
+    when:
+      event: [push]
+    image: golang:${goversion}
+    commands:
+      - go get
+      - go test -cover ./...
+      
   linter:
     when:
       event: [push]
