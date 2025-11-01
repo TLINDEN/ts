@@ -20,7 +20,7 @@ package main
 import (
 	"os"
 
-	"github.com/tlinden/ts/cmd"
+	"codeberg.org/scip/ts/cmd"
 )
 
 func main() {

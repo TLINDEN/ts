@@ -1,4 +1,4 @@
-module github.com/tlinden/ts
+module codeberg.org/scip/ts
 
 go 1.23.0
 

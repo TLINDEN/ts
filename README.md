@@ -155,7 +155,7 @@ your platform from the releases page and you're good to go.
 
 ### Installation using a pre-compiled binary
 
-Go to the [latest release page](https://github.com/TLINDEN/ts/releases/latest)
+Go to the [latest release page](https://codeberg.org/scip/ts/releases/latest)
 and look for your OS and platform. There are two options to install the binary:
 
 Directly     download     the     binary    for     your     platform,
@@ -196,7 +196,7 @@ install`.
 
 # Report bugs
 
-[Please open an issue](https://github.com/TLINDEN/ts/issues). Thanks!
+[Please open an issue](https://codeberg.org/scip/ts/issues). Thanks!
 
 # License
 
