@@ -2,6 +2,9 @@
 
 generic cli timestamp parser and calculator tool
 
+> [!IMPORTANT]
+> This app is now being maintained on [Codeberg](https://codeberg.org/scip/ts/).
+
 ## Introduction
 
 This little utility is a commandline frontent to the amazing datetime
